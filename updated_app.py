@@ -20,23 +20,26 @@ vocab_size = len(vocab)
 
 # Step 2: Define the model
 class NextWordPredictor(nn.Module):
-    def __init__(self, vocab_size, embedding_dim, hidden_dim, block_size, activation_fn):
+    def __init__(self, vocab_size, embedding_dim, hidden_dim, block_size):
         super(NextWordPredictor, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim, batch_first=True)
-        self.fc = nn.Linear(hidden_dim, vocab_size)
-        
-        # Choose activation function dynamically
-        if activation_fn == 'ReLU':
-            self.activation = nn.ReLU()
-        else:
-            self.activation = nn.Tanh()
+
+        # Correct the input size of fc1 to embedding_dim * block_size
+        self.fc1 = nn.Linear(embedding_dim * block_size, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, vocab_size)
+        self.block_size = block_size
 
     def forward(self, x):
-        x = self.embedding(x)
-        _, (h_n, _) = self.lstm(x)
-        out = self.fc(h_n[-1])
-        out = self.activation(out)
+        x = self.embedding(x)  # Shape: (batch_size, block_size, embedding_dim)
+
+        # Flatten only if x's dimensions are compatible with fc1
+        if x.size(1) == self.block_size:
+            x = x.view(x.size(0), -1)  # Flatten to (batch_size, block_size * embedding_dim)
+        else:
+            raise RuntimeError("Input size mismatch: ensure block_size matches during prediction.")
+
+        x = torch.relu(self.fc1(x))  # Apply ReLU after the first linear layer
+        out = self.fc2(x)  # Output logits for each vocabulary token
         return out
 
 # Step 3: Streamlit UI for User Inputs
