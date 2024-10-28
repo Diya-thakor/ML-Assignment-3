@@ -20,14 +20,20 @@ vocab_size = len(vocab)
 
 # Step 2: Define the model
 class NextWordPredictor(nn.Module):
-    def __init__(self, vocab_size, embedding_dim, hidden_dim, block_size):
+    def __init__(self, vocab_size, embedding_dim, hidden_dim, block_size, activation_fn="ReLU"):
         super(NextWordPredictor, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
-
-        # Adjusted the input size of fc1 to embedding_dim * block_size
         self.fc1 = nn.Linear(embedding_dim * block_size, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, vocab_size)
         self.block_size = block_size
+
+        # Set activation function based on parameter
+        if activation_fn == "ReLU":
+            self.activation = nn.ReLU()
+        elif activation_fn == "Tanh":
+            self.activation = nn.Tanh()
+        else:
+            raise ValueError("Unsupported activation function selected. Choose 'ReLU' or 'Tanh'.")
 
     def forward(self, x):
         x = self.embedding(x)  # Shape: (batch_size, block_size, embedding_dim)
@@ -38,7 +44,7 @@ class NextWordPredictor(nn.Module):
         else:
             raise RuntimeError("Input size mismatch: ensure block_size matches during prediction.")
 
-        x = torch.relu(self.fc1(x))  # Apply ReLU after the first linear layer
+        x = self.activation(self.fc1(x))  # Apply activation function after the first linear layer
         out = self.fc2(x)  # Output logits for each vocabulary token
         return out
 
@@ -75,7 +81,7 @@ model_paths = {
 selected_model_path = model_paths[(block_size, embedding_dim, activation_fn)]
 
 # Step 4: Initialize and load the model with selected parameters
-model = NextWordPredictor(vocab_size, embedding_dim, hidden_dim, block_size)
+model = NextWordPredictor(vocab_size, embedding_dim, hidden_dim, block_size, activation_fn)
 model.load_state_dict(torch.load(selected_model_path, map_location=device))  # Adjust path if necessary
 model.to(device)
 model.eval()  # Set the model to evaluation mode
