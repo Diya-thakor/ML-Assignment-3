@@ -93,7 +93,13 @@ def predict_next_word(model, seed_text, num_words=1, block_size=5):
     words = seed_text.lower().split()
     
     for _ in range(num_words):
+        # Prepare input sequence with padding if necessary
         input_seq = [word2idx.get(word, 0) for word in words[-block_size:]]
+        
+        # Pad sequence to match block_size
+        if len(input_seq) < block_size:
+            input_seq = [0] * (block_size - len(input_seq)) + input_seq
+        
         input_seq = torch.tensor(input_seq, dtype=torch.long).unsqueeze(0).to(device)
         
         with torch.no_grad():
