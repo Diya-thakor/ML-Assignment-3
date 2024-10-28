@@ -1,0 +1,2 @@
+streamlit==1.25.0
+torch==2.0.1  # Adjust version if necessary based on your CUDA configuration
