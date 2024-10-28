@@ -78,6 +78,7 @@ model_paths = {
     (10, 128, 'Tanh'): 'best_model_11.pth'
 }
 
+
 selected_model_path = model_paths[(block_size, embedding_dim, activation_fn)]
 
 # Step 4: Initialize and load the model with selected parameters
