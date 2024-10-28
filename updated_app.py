@@ -24,7 +24,7 @@ class NextWordPredictor(nn.Module):
         super(NextWordPredictor, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
 
-        # Correct the input size of fc1 to embedding_dim * block_size
+        # Adjusted the input size of fc1 to embedding_dim * block_size
         self.fc1 = nn.Linear(embedding_dim * block_size, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, vocab_size)
         self.block_size = block_size
@@ -75,7 +75,7 @@ model_paths = {
 selected_model_path = model_paths[(block_size, embedding_dim, activation_fn)]
 
 # Step 4: Initialize and load the model with selected parameters
-model = NextWordPredictor(vocab_size, embedding_dim, hidden_dim, block_size, activation_fn)
+model = NextWordPredictor(vocab_size, embedding_dim, hidden_dim, block_size)
 model.load_state_dict(torch.load(selected_model_path, map_location=device))  # Adjust path if necessary
 model.to(device)
 model.eval()  # Set the model to evaluation mode
